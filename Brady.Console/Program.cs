@@ -28,12 +28,16 @@ using IHost host = Host.CreateDefaultBuilder(args)
     .Build();
 
 Console.Clear();
+Console.WriteLine("------------------");
+Console.WriteLine("Brady Application");
+Console.WriteLine("------------------");
 
 var inputFolder = ConfigurationManager.AppSettings.Get("inputFolder");
 if (!ValidateFolderPath(inputFolder))
 {
     return;
 }
+
 
 using var fileWatcher = new FileSystemWatcher(inputFolder);
 fileWatcher.NotifyFilter = NotifyFilters.Attributes
@@ -52,19 +56,20 @@ fileWatcher.Created += OnCreated;
 fileWatcher.Filter = "*.xml";
 fileWatcher.IncludeSubdirectories = true;
 fileWatcher.EnableRaisingEvents = true;
-
+Console.WriteLine($"Filewatcher for inputfolder {inputFolder}");
 await host.RunAsync();
 
 
 void OnCreated(object sender, FileSystemEventArgs e)
 {
+    Console.WriteLine($"Found a file {e.FullPath}");
     ProcessFile(e.FullPath);
 }
 
 void ProcessFile(string fullPath)
 {
     try
-    {
+    { 
         using IServiceScope serviceScope = host.Services.CreateScope();
         IServiceProvider provider = serviceScope.ServiceProvider;
 
@@ -82,6 +87,7 @@ void ProcessFile(string fullPath)
         }
         var fileCreated = new FileCreated(fullPath, outputFolder, referenceData);
         processFileHandler.Handle(fileCreated);
+        Console.WriteLine($"Output file generated in {outputFolder}");
     }
     catch (Exception ex)
     {
@@ -96,7 +102,7 @@ bool ValidateFolderPath(string folderPath)
         Console.WriteLine($"Folder path {nameof(folderPath)} required");
         return false;
     }
-    else if (!Directory.Exists(folderPath))
+    else if (!Directory.Exists(folderPath) && !File.Exists(folderPath))
     {
         Console.WriteLine($"Invalid directory {folderPath}");
         return false;
