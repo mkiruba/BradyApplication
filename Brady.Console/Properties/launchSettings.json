@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Brady.Console": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
