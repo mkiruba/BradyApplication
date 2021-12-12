@@ -27,7 +27,14 @@ using IHost host = Host.CreateDefaultBuilder(args)
         .AddScoped<ITotalStrategy<WindGenerator>, WindTotalStrategy>())
     .Build();
 
+Console.Clear();
+
 var inputFolder = ConfigurationManager.AppSettings.Get("inputFolder");
+if (!ValidateFolderPath(inputFolder))
+{
+    return;
+}
+
 using var fileWatcher = new FileSystemWatcher(inputFolder);
 fileWatcher.NotifyFilter = NotifyFilters.Attributes
                                 | NotifyFilters.CreationTime
@@ -63,7 +70,16 @@ void ProcessFile(string fullPath)
 
         var processFileHandler = provider.GetRequiredService<IProcessFileHandler>();
         var outputFolder = ConfigurationManager.AppSettings.Get("outputFolder");
+        if (!ValidateFolderPath(outputFolder))
+        {
+            return;
+        }
+
         var referenceData = ConfigurationManager.AppSettings.Get("referenceData");
+        if (!ValidateFolderPath(referenceData))
+        {
+            return;
+        }
         var fileCreated = new FileCreated(fullPath, outputFolder, referenceData);
         processFileHandler.Handle(fileCreated);
     }
@@ -71,4 +87,19 @@ void ProcessFile(string fullPath)
     {
         Console.WriteLine(ex.ToString());
     }    
+}
+
+bool ValidateFolderPath(string folderPath)
+{
+    if (string.IsNullOrEmpty(folderPath))
+    {
+        Console.WriteLine($"Folder path {nameof(folderPath)} required");
+        return false;
+    }
+    else if (!Directory.Exists(folderPath))
+    {
+        Console.WriteLine($"Invalid directory {folderPath}");
+        return false;
+    }
+    return true;
 }
